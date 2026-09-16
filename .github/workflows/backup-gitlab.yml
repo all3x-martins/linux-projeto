@@ -1,0 +1,27 @@
+name: Backup para o GitLab
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    name: Espelhar repositório no GitLab
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obter histórico completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enviar branches e tags para o GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.backup_github_actions }}
+        run: |
+          set -euo pipefail
+          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@gitlab.com/all3x-martins/${{ github.event.repository.name }}.git"
+          git push --prune --force gitlab 'refs/remotes/origin/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
